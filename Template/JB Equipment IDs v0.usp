@@ -1,0 +1,118 @@
+/*Development Notes _________________________________________________________________________ Development Notes /*
+v0.0  : 
+
+#If_Defined cDebug
+#EndIf
+
+Development Notes _________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________ Module Compile Time Behavior
+//#Define_Constant cDebug            1
+
+//#Enable_Dynamic                                     
+#Enable_Trace
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE  
+#CATEGORY "32" // Miscellaneous                    
+#Output_Shift                      	2
+//#Analog_Serial_Expand              OutputsWithParams
+
+// ___________________________________________________________________________________________________ Constants
+#Define_Constant cMaxObjects           	300
+#DEFINE_CONSTANT cMaxFileSize      		16384
+#Define_Constant cMaxCharData      		200
+#DEFINE_CONSTANT cMaxCharFileExt   		64
+#DEFINE_CONSTANT cMaxCharFilePath  		128
+#define_constant cMaxChar				1028
+#ENABLE_TRACE
+// _____________________________________________________________________________________________________ F1 Help
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+//Help_Begin
+//#Help_End
+// ________________________________________________________________________________________ Simpl Input - Output 
+
+String_Input	Equipment_String[cMaxChar];
+Digital_Input	Connect;
+
+
+Analog_Output	Equipment_Set;
+Digital_Output	Connect_go, _Skip_,Connect_Busy_FB;
+//Analog_Output	Equipment_ID[cMaxObjects];
+
+
+// __________________________________________________________________________________________________ Parameters
+
+
+// _____________________________________________________________________________________________ Global Varibles
+
+integer Equipment_ID[cMaxObjects];
+								
+// ___________________________________________________________________________________________________ Functions
+
+Function fParse()
+{
+	string sData[cMaxChar];
+	string sData2[cMaxChar];
+	integer i;
+
+
+	sData = Equipment_String;
+	
+	While(len(sData))
+	{
+		if(len(sData)<4)
+		{
+			i=i+1;
+			sData2 = removebylength(len(sData), sData);
+			Equipment_ID[i] = atoi(sData2);
+		}
+		else
+		{
+        	i=i+1;
+			sData2 = remove(",", sData);
+			Equipment_ID[i] = atoi(sData2);			
+		}	
+	}
+}
+ 
+
+Function fConnect()
+{
+	integer i;
+    
+    Connect_Busy_FB = 1;
+    
+	for(i = 1 to cMaxObjects)
+	{
+		if(Equipment_ID[i]>0)
+		{
+			Equipment_Set = Equipment_ID[i];
+			delay(2);
+			pulse(3, Connect_go);
+			delay(2);						
+		}
+	}
+	
+	Connect_Busy_FB = 0;
+}
+
+// ________________________________________________________________________________________________ Simpl Events
+
+
+Change Equipment_String
+{
+    fParse();
+}
+
+push Connect
+{
+	fConnect();
+}
+
+
+// ________________________________________________________________________________________________ Start Up Code
+Function Main() 
+{                                  
+Connect_Busy_FB = 0;
+}

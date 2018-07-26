@@ -1,0 +1,452 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      1
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxCharData		 128
+#Define_Constant c_maxValues		 64
+
+// _________________________________________________________________________________________________ F1 Help
+
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug" 
+#user_simplsharp_library 	"Config_Core" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+digital_input	Enable;
+digital_input	Initialize;
+analog_input	RoomIndex;
+digital_input	_skip_,_skip_,_skip_,_skip_,_skip_,_skip_,_skip_;
+string_input	roomName_IN[c_maxCharData], shortName_IN[c_maxCharData], iconSerial_IN[c_maxCharData] ;
+analog_input	roomID_IN,iconAnalog_IN;
+string_input	hasVolumeFB_IN[c_maxCharData],sourceGroups_IN[c_maxCharData],avSources_IN[c_maxCharData];
+string_input	audioSources_IN[c_maxCharData],videoSources_IN[c_maxCharData],avrAudioSources_IN[c_maxCharData];
+string_input	distAudioSources_IN[c_maxCharData],tvAudioSources_IN[c_maxCharData];
+string_input	videoRoute_IN[c_maxCharData], audioRoute_IN[c_maxCharData], hasVideo_IN[c_maxCharData], hasAudio_IN[c_maxCharData];
+analog_input	tvInputDelay_IN, avrInputDelay_IN, minVolume_IN, maxVolume_IN, startupVolume_IN, bassLevel_IN, trebleLevel_IN; 
+analog_input	balance_IN,lights_IN,shades_IN,climate_IN;
+
+digital_output	Initialize_Busy_FB;
+digital_output	_skip_;
+digital_output	hasAudio, hasVideo, hasLights, hasClimate, hasShades,_skip_;
+analog_output	RoomIndex_FB;
+string_output	roomName, shortName, iconSerial;
+analog_output	roomID, iconAnalog; 
+string_output	hasVolumeFB;
+string_output	sourceGroups,avSources,audioSources,videoSources, avrAudioSources, distAudioSources, tvAudioSources;
+string_output	videoRoute, audioRoute;
+analog_output	tvInputDelay, avrInputDelay;
+analog_output	minVolume, maxVolume, startupVolume, bassLevel, trebleLevel, balance;
+analog_output	lights;
+analog_output	shades;
+analog_output	climate;
+
+// _________________________________________________________________________________________________ Parameters
+
+Integer_Parameter			RoomInstance						;
+
+#BEGIN_PARAMETER_PROPERTIES RoomInstance						
+	propValidUnits       = unitDecimal|unitTicks                ;
+	propDefaultUnit      = unitDecimal                          ;
+	propShortDescription = "Room Instance"                      ;
+#END_PARAMETER_PROPERTIES
+
+
+// _________________________________________________________________________________________________ Structure
+
+// _________________________________________________________________________________________________ Global Varibles
+
+Room this;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_roomBusy_FB(Integer s) {Initialize_Busy_FB = s ;}
+CallBack Function cbf_roomIndex_FB(Integer s) {RoomIndex_FB = s ;}                                                             
+CallBack Function cbf_roomName_FB(String s) { roomName = s ;}
+CallBack Function cbf_shortName_FB(String s) { shortName = s ;}
+CallBack Function cbf_roomID_FB(Integer s) { roomID = s ;}
+CallBack Function cbf_iconAnalog_FB(Integer s) { iconAnalog = s ;}
+CallBack Function cbf_iconSerial_FB(String s) { iconSerial = s ;}
+CallBack Function cbf_hasAudio_FB(String s) 
+{ 
+	signed_integer si;
+	string y[6];
+	y = "yes"; 
+	si = CompareStringsNoCase(s,y) ;
+	if(si = 0)
+	{
+		hasAudio = 1;
+	}
+	else
+	{
+		hasAudio = 0;
+	}	
+}
+CallBack Function cbf_hasVideo_FB(String s)
+{ 
+	signed_integer si;
+	string y[6];
+	y = "yes"; 
+	si = CompareStringsNoCase(s,y) ;
+	if(si = 0)
+	{
+		hasVideo = 1;
+	}
+	else
+	{
+		hasVideo = 0;
+	}	
+}
+CallBack Function cbf_volumeFB_FB(string s) { hasVolumeFB = s ;}
+CallBack Function cbf_sourceGroups_FB(String s) { sourceGroups = s ;}
+CallBack Function cbf_avSources_FB(String s) { avSources = s ;}
+CallBack Function cbf_audioSources_FB(String s) { audioSources = s ;}
+CallBack Function cbf_videoSources_FB(String s) { videoSources = s ;}
+CallBack Function cbf_avrAudioSources_FB(String s) { avrAudioSources = s ;}
+CallBack Function cbf_distAudioSources_FB(String s) { distAudioSources = s ;}
+CallBack Function cbf_tvAudioSources_FB(String s) { tvAudioSources = s ;}
+CallBack Function cbf_videoRoute_FB(String s) { videoRoute = s ;}
+CallBack Function cbf_audioRoute_FB(String s) { audioRoute = s ;}
+CallBack Function cbf_tvInputDelay_FB(Integer s) { tvInputDelay = s ;}
+CallBack Function cbf_avrInputDelay_FB(Integer s) { avrInputDelay = s ;}
+CallBack Function cbf_minVolume_FB(Integer s) { minVolume = s ;}
+CallBack Function cbf_maxVolume_FB(Integer s) { maxVolume = s ;}
+CallBack Function cbf_startupVolume_FB(Integer s) { startupVolume = s ;}
+CallBack Function cbf_bassLevel_FB(signed_integer s) { bassLevel = s ;}
+CallBack Function cbf_trebleLevel_FB(signed_Integer s) { trebleLevel = s ;}
+CallBack Function cbf_balance_FB(signed_Integer s) { balance = s ;}
+CallBack Function cbf_lights_FB(Integer s)
+{ 
+	lights = s ;
+	if(s > 0)
+	{
+		hasLights = 1;
+	}
+	else
+	{
+		hasLights = 0;
+	}
+}
+CallBack Function cbf_shades_FB(Integer s)
+{ 
+	shades = s ;
+	if(s > 0)
+	{
+		hasShades = 1;
+	}
+	else
+	{
+		hasShades = 0;
+	}
+}
+
+CallBack Function cbf_climate_FB(Integer s) 
+{ 
+	climate = s ;
+	if(s > 0)
+	{
+		hasClimate = 1;
+	}
+	else
+	{
+		hasClimate = 0;
+	}
+}
+
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+	if(Enable)
+	{
+		this.GetRoom(RoomInstance);
+	}	
+}
+
+Change RoomIndex
+{
+	this.roomIndex = RoomIndex;
+	this.GetRoom(RoomIndex);	
+}
+
+Change roomName_IN
+{
+	if(len(roomName_IN))
+	{
+		this.roomName = roomName_IN;
+	}	
+}
+ 
+Change shortName_IN
+{
+	if(len(shortName_IN))
+	{	
+		this.shortName = shortName_IN;
+	}
+}
+
+Change iconSerial_IN
+{
+	if(len(iconSerial_IN))
+	{
+		this.iconSerial = iconSerial_IN;
+	}
+}
+
+Change roomID_IN
+{
+	if(roomID_IN > -1)
+	{
+		this.roomID = roomID_IN;
+	}	
+}
+
+Change iconAnalog_IN
+{
+	if(iconAnalog_IN > -1)
+	{
+		this.iconAnalog = iconAnalog_IN;
+	}	
+}
+
+Change hasVolumeFB_IN
+{
+	if(len(hasVolumeFB_IN))
+	{
+		this.showVolumeFB = hasVolumeFB_IN;
+	}
+}
+
+Change sourceGroups_IN
+{	
+	if(len(sourceGroups_IN))
+	{
+		this.sourceGroups = sourceGroups_IN;
+	}
+}
+
+Change avSources_IN
+{
+	if(len(avSources_IN))
+	{
+		this.avSources = avSources_IN;
+	}
+}
+
+Change audioSources_IN
+{
+	if(len(audioSources_IN))
+	{
+		this.audioSources = audioSources_IN;
+	}
+}
+
+Change videoSources_IN
+{
+	if(len(videoSources_IN))
+	{
+		this.videoSources = videoSources_IN;
+	}
+}
+
+Change avrAudioSources_IN
+{
+	if(len(avrAudioSources_IN))
+	{
+	this.avrAudioSources = avrAudioSources_IN;
+	}
+}
+
+Change distAudioSources_IN
+{
+	if(len(distAudioSources_IN))
+	{
+		this.distAudioSources = distAudioSources_IN;
+	}
+}
+
+Change tvAudioSources_IN
+{
+	if(len(tvAudioSources_IN))
+	{
+	this.tvAudioSources = tvAudioSources_IN;
+	}
+}
+
+Change videoRoute_IN
+{
+	if(len(videoRoute_IN))
+	{
+		this.videoRoute = videoRoute_IN;
+	}
+}
+
+Change audioRoute_IN
+{
+	if(len(audioRoute_IN))
+	{
+		this.audioRoute = audioRoute_IN;
+	}
+}
+    
+Change tvInputDelay_IN
+{
+	if(tvInputDelay_IN > -1)
+	{
+		this.tvInputDelay = tvInputDelay_IN;
+	}
+}
+
+Change avrInputDelay_IN
+{
+	if(avrInputDelay_IN > -1)
+	{
+		this.avrInputDelay = avrInputDelay_IN;
+	}
+}
+
+Change minVolume_IN
+{
+	if(minVolume_IN > -1)
+	{
+		this.minVolume = minVolume_IN;
+	}
+}
+
+Change maxVolume_IN
+{
+	if(maxVolume_IN > -1)
+	{
+		this.maxVolume = maxVolume_IN;
+	}
+} 
+
+Change startupVolume_IN
+{
+	if(startupVolume_IN > -1)
+	{
+		this.startupVolume = startupVolume_IN;
+	}
+}
+
+Change bassLevel_IN
+{
+	if(bassLevel_IN > -1)
+	{
+		this.bassLevel = bassLevel_IN;
+	}
+}
+
+Change trebleLevel_IN
+{
+	if(trebleLevel_IN > -1)
+	{
+		this.trebleLevel = trebleLevel_IN;
+	}
+}
+
+Change balance_IN
+{
+	if(balance_IN > -1)
+	{
+		this.balance = balance_IN;
+	}
+}
+
+Change lights_IN
+{
+	if(lights_IN > -1)
+	{
+		this.lights = lights_IN;
+	}
+}
+
+Change shades_IN
+{
+	if(shades_IN > -1)
+	{
+		this.shades = shades_IN;
+	}
+}
+
+Change climate_IN
+{
+	if(climate_IN > -1)
+	{
+		this.climate = climate_IN;
+	}
+}
+
+Change hasAudio_IN
+{
+	if(len(hasAudio_IN))
+	{
+		this.hasAudio = hasAudio_IN;
+	}
+}
+
+Change hasVideo_IN
+{
+	if(len(hasVideo_IN))
+	{
+		this.hasVideo = hasVideo_IN;
+	}
+}
+
+   
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{
+	waitforinitializationcomplete();
+
+	RegisterDelegate(this, roomBusy_, cbf_roomBusy_FB);
+	RegisterDelegate(this, roomIndex_, cbf_roomIndex_FB);
+	RegisterDelegate(this, roomName_, cbf_roomName_FB);
+	RegisterDelegate(this, shortName_, cbf_shortName_FB);
+	RegisterDelegate(this, roomID_, cbf_roomID_FB);
+	RegisterDelegate(this, iconAnalog_, cbf_iconAnalog_FB);
+	RegisterDelegate(this, iconSerial_, cbf_iconSerial_FB);
+	RegisterDelegate(this, hasAudio_, cbf_hasAudio_FB);
+	RegisterDelegate(this, hasVideo_, cbf_hasVideo_FB);
+	RegisterDelegate(this, showVolumeFB_, cbf_volumeFB_FB);
+    RegisterDelegate(this, sourceGroups_, cbf_sourceGroups_FB);
+	RegisterDelegate(this, audioSources_, cbf_audioSources_FB);
+	RegisterDelegate(this, videoSources_, cbf_videoSources_FB);
+	RegisterDelegate(this, avSources_, cbf_avSources_FB);
+	RegisterDelegate(this, avrAudioSources_, cbf_avrAudioSources_FB);
+	RegisterDelegate(this, distAudioSources_, cbf_distAudioSources_FB);
+	RegisterDelegate(this, tvAudioSources_, cbf_tvAudioSources_FB);
+	RegisterDelegate(this, videoRoute_, cbf_videoRoute_FB);
+	RegisterDelegate(this, audioRoute_, cbf_audioRoute_FB);
+	RegisterDelegate(this, tvInputDelay_, cbf_tvInputDelay_FB);
+	RegisterDelegate(this, avrInputDelay_, cbf_avrInputDelay_FB);
+	RegisterDelegate(this, minVolume_, cbf_minVolume_FB);
+	RegisterDelegate(this, maxVolume_, cbf_maxVolume_FB);
+	RegisterDelegate(this, startupVolume_, cbf_startupVolume_FB);
+	RegisterDelegate(this, bassLevel_, cbf_bassLevel_FB);
+	RegisterDelegate(this, trebleLevel_, cbf_trebleLevel_FB);
+	RegisterDelegate(this, balance_, cbf_balance_FB);
+	RegisterDelegate(this, lights_, cbf_lights_FB);
+	RegisterDelegate(this, shades_, cbf_shades_FB);
+	RegisterDelegate(this, climate_, cbf_climate_FB);
+	
+	this.roomIndex = RoomInstance;
+}
+
+ 

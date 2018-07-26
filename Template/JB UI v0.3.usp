@@ -1,0 +1,120 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      1
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxCharData		 128
+#Define_Constant c_maxValues		 64
+
+// _________________________________________________________________________________________________ F1 Help
+
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug" 
+#user_simplsharp_library 	"Config_Core" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+digital_input	Enable;
+digital_input	Initialize;
+digital_input	_skip_;
+analog_input	ID_IN, DefaultRoom_IN, DefaultUser_IN; 
+string_input	Rooms_IN[c_maxCharData], Subsystems_IN[c_maxCharData];
+
+digital_output	Initialize_Busy_FB;
+digital_output	_skip_;
+
+analog_output	UI_ID, DefaultRoom, DefaultUser;
+string_output	Rooms, Subsystems;
+
+// _________________________________________________________________________________________________ Parameters
+
+Integer_Parameter			UIInstance						;
+
+#BEGIN_PARAMETER_PROPERTIES UIInstance						
+	propValidUnits       = unitDecimal|unitTicks                ;
+	propDefaultUnit      = unitDecimal                          ;
+	propShortDescription = "UI Instance"                      ;
+#END_PARAMETER_PROPERTIES
+
+
+// _________________________________________________________________________________________________ Structure
+
+// _________________________________________________________________________________________________ Global Varibles
+
+UserInterface this;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_UIBusy_FB(Integer s) {Initialize_Busy_FB = s ;}
+
+CallBack Function cbf_UIID_FB(Integer s) { UI_ID = s ;}                                                             
+CallBack Function cbf_Rooms_FB(String s) { Rooms = s ;}
+CallBack Function cbf_Subsystems_FB(String s) { Subsystems = s ;}
+CallBack Function cbf_DefaultRoom_FB(Integer s) { DefaultRoom = s ;}
+CallBack Function cbf_DefaultUser_FB(Integer s) { DefaultUser = s ;}
+
+
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+	if(Enable)
+	{
+		this.UIIndex = UIInstance;
+		this.GetUI(UIInstance);
+	}	
+}
+
+Change ID_IN
+{
+	this.UIID = ID_IN;
+}
+
+Change DefaultRoom_IN
+{
+	this.DefaultRoom = DefaultRoom_IN;
+}
+
+Change DefaultUser_IN
+{
+	this.DefaultUser = DefaultUser_IN;
+}
+
+Change Rooms_IN
+{
+	this.UIRooms = Rooms_IN;
+}
+
+Change Subsystems_IN
+{
+	this.UISubsystems = Subsystems_IN;
+}
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{
+	RegisterDelegate(this, UIBusy_, cbf_UIBusy_FB);
+
+    RegisterDelegate(this, UIID_, cbf_UIID_FB);
+    RegisterDelegate(this, UIRooms_, cbf_Rooms_FB);
+	RegisterDelegate(this, UISubsystems_, cbf_Subsystems_FB);
+	RegisterDelegate(this, DefaultRoom_, cbf_DefaultRoom_FB);
+	RegisterDelegate(this, DefaultUser_, cbf_DefaultUser_FB);
+}
+
+ 

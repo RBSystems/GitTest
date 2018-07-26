@@ -1,0 +1,132 @@
+ /* 
+Development Notes _________________________________________________________________________ Development Notes /*
+v0.0  : 
+
+#If_Defined cDebug
+#EndIf
+
+Development Notes _________________________________________________________________________ Development Notes */ 
+
+
+// ________________________________________________________________________________ Module Compile Time Behavior
+//#Define_Constant cDebug            1
+
+//#Enable_Dynamic                                     
+//#Enable_Trace
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE                      
+
+//#Output_Shift                      2
+//#Analog_Serial_Expand              OutputsWithParams
+
+// ___________________________________________________________________________________________________ Constants
+#Define_Constant cMaxInChar          400
+#Define_Constant cMaxPresets         6
+#Define_Constant cMaxLoads           450
+#Define_Constant cMaxChar            64
+#Define_Constant cMaxInclude          50
+
+// _____________________________________________________________________________________________________ F1 Help
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+#Help_Begin
+#Help_End
+// ________________________________________________________________________________________ Simpl Input - Output 
+Digital_Input  Initialize,Enable, _SKIP_ ,refresh                      ;
+Analog_Input   Offset											;
+String_Input   Rm_Load_Order[cMaxInChar]						;
+analog_Output  Load_Ct, _SKIP_ ,Cross_Connect					;
+Digital_output Busy_FB,Ready									; 
+//Digital_output  Load[cMaxLoads]									; 
+Analog_Output  Load_Order[cMaxInclude]							;
+
+// __________________________________________________________________________________________________ Parameters
+// _____________________________________________________________________________________________ Global Varibles
+Integer g_iOrder[cMaxLoads]  									;
+// ___________________________________________________________________________________________________ Functions
+
+// ________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+	Integer i																								;
+	String sHold[cMaxInChar],sTemp[cMaxChar]                                                        		;
+	If(!Busy_FB && len(Rm_Load_Order)&& Enable)
+	{
+		Busy_FB = On																							;
+		sHold = Rm_Load_Order																					;
+		setarray(g_iOrder,0);
+		i=0;
+		while(len(sHold))
+		{
+			if(find(",",sHold))
+			{
+				i=i+1																							;
+				sTemp = remove(",",sHold)																		;
+				g_iOrder[i] = atoi(sTemp)																		;
+				if(i<=cMaxInclude){Load_Order[i] = atoi(sTemp);}													;			
+        	}
+			else
+			{
+				i=i+1																							;
+				sTemp = removebylength(len(sHold),sHold)														;
+				g_iOrder[i] = atoi(sTemp)																		;
+				if(i<=cMaxInclude){Load_Order[i] = atoi(sTemp);}													;					
+        	}
+               
+		}
+		Load_Ct = i																								;
+		//setarray(Load ,0)																						;
+		pulse(50,Ready)																							;
+		Delay(20)																								;
+		For(i = 1 to cMaxLoads)
+		{
+	 		if(g_iOrder[i])
+	 		{
+	 	 		if(g_iOrder[i]<= cMaxLoads)
+	 	 		{
+	 	 	 		//Load[g_iOrder[i]] = on																		;
+					Cross_Connect = g_iOrder[i]	+ Offset																;
+						 	 	 		
+					DELAY(20)																					;
+	 	 		}
+	 		}
+	 	
+		}
+		 
+	}
+	Busy_FB = off																							;	
+}
+push refresh
+{
+	Integer i																									;
+	If(!Busy_FB && Enable)
+	{
+		Busy_FB = On																							;
+  		//setarray(Load ,0)																						;
+  		pulse(50,Ready)																							;
+		Delay(20)																								;
+		For(i = 1 to cMaxLoads)
+		{
+	 		if(g_iOrder[i])
+	 		{
+	 	 		if(g_iOrder[i]<= cMaxLoads)
+	 	 		{
+	 	 	 		//Load[g_iOrder[i]] = on																		;
+					Cross_Connect = g_iOrder[i]	+ Offset														;
+	 	 	 		DELAY(20)																					;
+	 	 		}
+	 		}
+	 	
+		}
+		 
+   }
+		Busy_FB = Off																							;
+}
+// ________________________________________________________________________________________________ Start Up Code
+Function Main() 
+{
+	
+	//	WaitForInitializationComplete()                                                            ;
+	
+}

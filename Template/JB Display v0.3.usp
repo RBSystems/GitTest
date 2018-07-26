@@ -1,0 +1,332 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      1
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxCharData		 128
+#Define_Constant c_maxValues		 64
+#Define_Constant c_maxInputs		 10
+
+// _________________________________________________________________________________________________ F1 Help
+
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug" 
+#user_simplsharp_library 	"Config_Core" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+digital_input	Enable;
+digital_input	Initialize;
+digital_input	_skip_;
+digital_input	Display_Power_On_FB;
+analog_input	Input_Delay;
+analog_input	Source_FB;
+string_input	_skip_,InputSources[c_maxInputs,c_maxInputs][c_maxCharData];
+
+digital_output	Initialize_Busy_FB;
+digital_output	_skip_,_skip_,_skip_,_skip_,_skip_;
+digital_output	InputPulse[c_maxInputs,c_maxInputs];
+
+// _________________________________________________________________________________________________ Parameters
+
+Integer_Parameter			DisplayInstance						;
+
+#BEGIN_PARAMETER_PROPERTIES DisplayInstance						
+	propValidUnits       = unitDecimal|unitTicks                ;
+	propDefaultUnit      = unitDecimal                          ;
+	propShortDescription = "Display Instance"                      ;
+#END_PARAMETER_PROPERTIES
+
+
+// _________________________________________________________________________________________________ Structure
+
+// _________________________________________________________________________________________________ Global Varibles
+
+Display this;
+
+string g_sInput01_Sources[c_maxCharData];
+string g_sInput02_Sources[c_maxCharData];	
+string g_sInput03_Sources[c_maxCharData];
+string g_sInput04_Sources[c_maxCharData];
+string g_sInput05_Sources[c_maxCharData];
+string g_sInput06_Sources[c_maxCharData];
+string g_sInput07_Sources[c_maxCharData];
+string g_sInput08_Sources[c_maxCharData];
+string g_sInput09_Sources[c_maxCharData];
+string g_sInput10_Sources[c_maxCharData];
+
+integer g_iSrcInput[c_maxValues];
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_DisplayBusy_FB(Integer s) {Initialize_Busy_FB = s ;}
+
+CallBack Function cbf_Input01_Sources_FB(string s) { g_sInput01_Sources = s ;}                                                             
+CallBack Function cbf_Input02_Sources_FB(string s) { g_sInput02_Sources = s ;} 
+CallBack Function cbf_Input03_Sources_FB(string s) { g_sInput03_Sources = s ;} 
+CallBack Function cbf_Input04_Sources_FB(string s) { g_sInput04_Sources = s ;} 
+CallBack Function cbf_Input05_Sources_FB(string s) { g_sInput05_Sources = s ;} 
+CallBack Function cbf_Input06_Sources_FB(string s) { g_sInput06_Sources = s ;} 
+CallBack Function cbf_Input07_Sources_FB(string s) { g_sInput07_Sources = s ;} 
+CallBack Function cbf_Input08_Sources_FB(string s) { g_sInput08_Sources = s ;} 
+CallBack Function cbf_Input09_Sources_FB(string s) { g_sInput09_Sources = s ;} 
+CallBack Function cbf_Input10_Sources_FB(string s) { g_sInput10_Sources = s ;} 
+
+
+function fParse()
+{
+	string temp[255];
+	integer i;
+
+//__Input-01__________________________//    
+	temp = g_sInput01_Sources;
+	if(len(temp))
+	{
+		while(find(",", temp) > 0)
+		{
+			i = atoi(remove(",", temp));
+			g_iSrcInput[i] = 1;
+		}
+		
+		i = atoi(temp);
+		g_iSrcInput[i] = 1;
+	}
+
+//__Input-02__________________________//	
+	temp = g_sInput02_Sources;
+	if(len(temp))
+	{	
+		while(find(",", temp) > 0)
+		{
+			i = atoi(remove(",", temp));
+			g_iSrcInput[i] = 2;	
+		}
+		
+		i = atoi(temp);
+		g_iSrcInput[i] = 2;
+	}
+
+//__Input-03__________________________//    
+	temp = g_sInput03_Sources;
+	if(len(temp))
+	{	
+		while(find(",", temp) > 0)
+		{
+			i = atoi(remove(",", temp));
+			g_iSrcInput[i] = 3;
+		}
+		
+		i = atoi(temp);
+		g_iSrcInput[i] = 3;
+	}
+
+//__Input-04__________________________//    
+	temp = g_sInput04_Sources;
+	if(len(temp))
+	{	
+	while(find(",", temp) > 0)
+	{
+		i = atoi(remove(",", temp));
+		g_iSrcInput[i] = 4;			
+	}
+		
+		i = atoi(temp);
+	g_iSrcInput[i] = 4;
+	}
+
+//__Input-05__________________________//    
+	temp = g_sInput05_Sources;
+	if(len(temp))
+	{	
+	while(find(",", temp) > 0)
+	{
+		i = atoi(remove(",", temp));
+		g_iSrcInput[i] = 5;			
+	}
+		
+		i = atoi(temp);
+	g_iSrcInput[i] = 5;
+	}
+
+//__Input-06__________________________//    
+	temp = g_sInput06_Sources;
+	if(len(temp))
+	{
+	
+	while(find(",", temp) > 0)
+	{
+		i = atoi(remove(",", temp));
+		g_iSrcInput[i] = 6;			
+	}
+		
+		i = atoi(temp);
+	g_iSrcInput[i] = 6;
+	}
+
+//__Input-07__________________________//    
+	temp = g_sInput07_Sources;
+	if(len(temp))
+	{
+	
+	while(find(",", temp) > 0)
+	{
+		i = atoi(remove(",", temp));
+		g_iSrcInput[i] = 7;			
+	}
+		
+		i = atoi(temp);
+	g_iSrcInput[i] = 7;
+	}
+
+//__Input-08__________________________//    
+	temp = g_sInput08_Sources;
+	if(len(temp))
+	{	
+	while(find(",", temp) > 0)
+	{
+		i = atoi(remove(",", temp));
+		g_iSrcInput[i] = 8;			
+	}
+		
+		i = atoi(temp);
+	g_iSrcInput[i] = 8;
+	}
+
+//__Input-09__________________________//    
+	temp = g_sInput09_Sources;
+	if(len(temp))
+	{	
+	while(find(",", temp) > 0)
+	{
+		i = atoi(remove(",", temp));
+		g_iSrcInput[i] = 9;			
+	}
+		
+		i = atoi(temp);
+	g_iSrcInput[i] = 9;
+	}
+
+//__Input-010__________________________//    
+	temp = g_sInput10_Sources;
+	if(len(temp))
+	{	
+	while(find(",", temp) > 0)
+	{
+		i = atoi(remove(",", temp));
+		g_iSrcInput[i] = 10;			
+	}
+		
+		i = atoi(temp);
+	g_iSrcInput[i] = 10;
+	}
+}
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+		this.DisplayIndex = DisplayInstance;
+		this.GetDisplay(DisplayInstance);
+		fParse();	
+}
+
+Change Source_FB
+{
+	integer i,j;
+    
+	i = Source_FB;
+    j = g_iSrcInput[i];
+	
+	if(!Display_Power_On_FB)
+	{
+    	delay(Input_Delay);
+		pulse(20, InputPulse[j]); 
+	}
+	else
+	{
+		pulse(20, InputPulse[j]);		
+	}
+}
+
+Change InputSources
+{	
+	integer i;
+	i = getlastmodifiedarrayindex();
+	switch(i)
+	{
+		case(1):
+		{
+			this.Input01_Sources = InputSources[1];
+		}
+		case(2):
+		{
+			this.Input02_Sources = InputSources[2];
+		}
+		case(3):
+		{
+			this.Input03_Sources = InputSources[3];
+		}
+		case(4):
+		{
+			this.Input04_Sources = InputSources[4];
+		}
+		case(5):
+		{
+			this.Input05_Sources = InputSources[5];
+		}
+		case(6):
+		{
+			this.Input06_Sources = InputSources[6];
+		}
+		case(7):
+		{
+			this.Input07_Sources = InputSources[7];
+		}
+		case(8):
+		{
+			this.Input08_Sources = InputSources[8];
+		}
+		case(9):
+		{
+			this.Input09_Sources = InputSources[9];
+		}
+		case(10):
+		{
+			this.Input10_Sources = InputSources[10];
+		}
+	}
+}
+
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{
+	RegisterDelegate(this, DisplayBusy_, cbf_DisplayBusy_FB);
+
+    RegisterDelegate(this, Input01_Sources_, cbf_Input01_Sources_FB);
+    RegisterDelegate(this, Input02_Sources_, cbf_Input02_Sources_FB);
+    RegisterDelegate(this, Input03_Sources_, cbf_Input03_Sources_FB);    
+	RegisterDelegate(this, Input04_Sources_, cbf_Input04_Sources_FB);
+    RegisterDelegate(this, Input05_Sources_, cbf_Input05_Sources_FB);
+    RegisterDelegate(this, Input06_Sources_, cbf_Input06_Sources_FB);
+    RegisterDelegate(this, Input07_Sources_, cbf_Input07_Sources_FB);
+    RegisterDelegate(this, Input08_Sources_, cbf_Input08_Sources_FB);
+    RegisterDelegate(this, Input09_Sources_, cbf_Input09_Sources_FB);
+    RegisterDelegate(this, Input10_Sources_, cbf_Input10_Sources_FB);
+}
+
+ 

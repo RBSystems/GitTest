@@ -1,0 +1,97 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      1
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxCharData		 128
+#Define_Constant c_maxValues		 25
+#Define_Constant c_maxInputs		 10
+
+// _________________________________________________________________________________________________ F1 Help
+
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+
+// _________________________________________________________________________________________________ Libraries
+#includepath				"..\\bin\\Debug" 
+
+#user_simplsharp_library 	"Config_Core" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+digital_input	Enable;
+digital_input	Initialize, _skip_;
+string_input	ZoneName_IN[c_maxCharData], IncludedLoads_IN[c_maxCharData];
+
+
+digital_output	Initialize_Busy_FB, _skip_;
+string_output	ZoneName, IncludedLoads;
+
+// _________________________________________________________________________________________________ Parameters
+
+Integer_Parameter			LightZoneID						;
+
+#BEGIN_PARAMETER_PROPERTIES LightZoneID						
+	propValidUnits       = unitDecimal|unitTicks                ;
+	propDefaultUnit      = unitDecimal                          ;
+	propShortDescription = "Light Zone"	                        ;
+#END_PARAMETER_PROPERTIES
+
+
+// _________________________________________________________________________________________________ Structure
+
+// _________________________________________________________________________________________________ Global Varibles
+
+LightZone this;
+
+string g_sLightName[c_maxCharData];
+string g_sLightType[c_maxCharData];
+string g_sType[c_maxCharData];
+signed_integer g_siTypeMatch;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_LightBusy_FB(Integer s) {Initialize_Busy_FB = s ;}
+
+CallBack Function cbf_ZoneName_FB(string s) { ZoneName = s ;}                                                             
+CallBack Function cbf_Lights_FB(string s) { IncludedLoads = s ;} 
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+		this.ZoneIndex = LightZoneID;
+		this.GetZone(LightZoneID);
+}
+
+Change ZoneName_IN
+{
+	this.ZoneName = ZoneName_IN;
+}
+
+Change IncludedLoads_IN
+{
+	this.IncludedLoads = IncludedLoads_IN;
+}
+
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{
+	RegisterDelegate(this, LightsBusy_, cbf_LightBusy_FB);
+
+    RegisterDelegate(this, ZoneName_, cbf_ZoneName_FB);
+    RegisterDelegate(this, IncludedLoads_, cbf_Lights_FB);
+}
+
+ 

@@ -1,0 +1,306 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      0
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxChar			 128
+#Define_Constant c_maxValues		 64
+#Define_Constant c_maxInputs		 10
+
+// _________________________________________________________________________________________________ F1 Help
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug"
+#user_simplsharp_library 	"Wattbox" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+
+digital_input 	Initialize;
+digital_input	GetStatus, sendCommand;
+analog_input	Outlet, Command;
+string_input 	IP_Address[16], UserName[32], Password[32];
+
+string_output	Message_FB, IPAddress_FB, hostName_FB, hardwareVersion_FB, serialNumber_FB;
+string_output	autoReboot_FB, safeVoltageStatus_FB, voltageValue_FB;
+string_output	currentValue_FB, powerValue_FB;
+
+string_output	siteIP_FB[16], connectStatus_FB[16], siteLost_FB[16];
+string_output	outletName_FB[12]; 
+analog_output	outletStatus_FB[12], outletMode_FB[12], ledStatus_FB[4];
+
+// _________________________________________________________________________________________________ Parameters
+
+String_Parameter Default_IP[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_IP
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default IP Address"			        ;
+#END_PARAMETER_PROPERTIES
+
+String_Parameter Default_User[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_User
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default User Name"     			  	;
+#END_PARAMETER_PROPERTIES
+
+String_Parameter Default_Pass[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_Pass
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default Password"			        ;
+#END_PARAMETER_PROPERTIES
+
+// _________________________________________________________________________________________________ Structure
+// _________________________________________________________________________________________________ Global Varibles
+
+API this;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_Message_FB			(String s) {	Message_FB = s 						;}
+CallBack Function cbf_IPAddress_FB			(String s) {	IPAddress_FB = s 					;}
+CallBack Function cbf_hostName_FB			(String s) {	hostName_FB = s 					;}
+CallBack Function cbf_hardwareVersion_FB	(String s) {	hardwareVersion_FB = s 				;}
+CallBack Function cbf_serialNumber_FB		(String s) {	serialNumber_FB = s 				;}
+CallBack Function cbf_siteIP_FB				(String s) 
+{	
+	string temp[32];
+	string data[32];
+	integer i,j;
+     
+	data = s;
+	i = 0;
+
+	if(len(data))
+	{
+		while(find("," , data) > 0)
+		{
+			//print("\n\rdata = %s", data);			
+			temp = remove(",", data);
+			//print("\n\rtemp = %s", temp);
+			i = i+1;
+			//print("\n\ri = %d", i);
+			j = len(temp) - 1 ; 
+			siteIP_FB[i] = removebylength(j , temp);	
+		}
+        
+		//print("exited while loop");
+		i = i+1;
+		siteIP_FB[i] = data;
+	}
+}
+CallBack Function cbf_connectStatus_FB		(String s) 
+{	
+	string temp[32];
+	string data[32];
+	integer i,j;
+     
+	data = s;
+	i = 0;
+
+	if(len(data))
+	{
+		while(find("," , data) > 0)
+		{		
+			temp = remove(",", data);
+			i = i+1;
+			j = len(temp) - 1 ; 
+			connectStatus_FB[i] = removebylength(j , temp);	
+		}
+
+		i = i+1;
+		connectStatus_FB[i] = data;
+	}
+}
+CallBack Function cbf_siteLost_FB			(String s) 
+{	
+	string temp[32];
+	string data[32];
+	integer i,j;
+     
+	data = s;
+	i = 0;
+
+	if(len(data))
+	{
+		while(find("," , data) > 0)
+		{		
+			temp = remove(",", data);
+			i = i+1;
+			j = len(temp) - 1 ; 
+			siteLost_FB[i] = removebylength(j , temp);	
+		}
+
+		i = i+1;
+		siteLost_FB[i] = data;
+	}
+}
+CallBack Function cbf_autoReboot_FB			(String s) {	autoReboot_FB = s 					;}
+CallBack Function cbf_outletName_FB			(String s)
+{	
+	string temp[32];
+	string data[32];
+	integer i,j;
+     
+	data = s;
+	i = 0;
+
+	if(len(data))
+	{
+		while(find("," , data) > 0)
+		{		
+			temp = remove(",", data);
+			i = i+1;
+			j = len(temp) - 1 ; 
+			outletName_FB[i] = removebylength(j , temp);	
+		}
+
+		i = i+1;
+		outletName_FB[i] = data;
+	}
+}
+CallBack Function cbf_outletStatus_FB		(String s) 
+{	
+	string temp[32];
+	string data[32];
+	integer i,j;
+     
+	data = s;
+	i = 0;
+
+	if(len(data))
+	{
+		while(find("," , data) > 0)
+		{		
+			temp = remove(",", data);
+			i = i+1;
+			j = len(temp) - 1 ; 
+			outletStatus_FB[i] = atoi(temp);	
+		}
+
+		i = i+1;
+		outletStatus_FB[i] = atoi(data);
+	}
+}
+CallBack Function cbf_outletMode_FB			(String s)
+{	
+	string temp[32];
+	string data[32];
+	integer i,j;
+     
+	data = s;
+	i = 0;
+
+	if(len(data))
+	{
+		while(find("," , data) > 0)
+		{		
+			temp = remove(",", data);
+			i = i+1;
+			j = len(temp) - 1 ; 
+			outletMode_FB[i] = atoi(temp);	
+		}
+
+		i = i+1;
+		outletMode_FB[i] = atoi(data);
+	}
+}
+CallBack Function cbf_ledStatus_FB			(String s) 
+{	
+	string temp[32];
+	string data[32];
+	integer i,j;
+     
+	data = s;
+	i = 0;
+
+	if(len(data))
+	{
+		while(find("," , data) > 0)
+		{		
+			temp = remove(",", data);
+			i = i+1;
+			j = len(temp) - 1 ; 
+			ledStatus_FB[i] = atoi(temp);	
+		}
+
+		i = i+1;
+		ledStatus_FB[i] = atoi(data);
+	}
+}
+CallBack Function cbf_safeVoltageStatus_FB	(String s) {	safeVoltageStatus_FB = s 			;}
+CallBack Function cbf_voltageValue_FB		(String s) {	voltageValue_FB = s 				;}
+CallBack Function cbf_currentValue_FB		(String s) {	currentValue_FB = s 				;}
+CallBack Function cbf_powerValue_FB			(String s) {	powerValue_FB = s 					;}
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push	Initialize				
+	{	
+		this.Initialize()										;
+	}
+
+Push	GetStatus
+	{
+		this.getStatus()										;
+	}
+Change 	IP_Address 				
+	{
+		if(len(IP_Address) > 4)
+		{ 	
+			this.ipAddress 	= 	IP_Address						;
+		}
+	}
+Change 	UserName 				
+	{ 	
+		this.UserName	=	UserName							; 
+	}
+Change 	Password 				
+	{
+		this.Password	=	Password							;
+	}
+Push	SendCommand
+{
+	this.controlOutlet(Outlet, Command)							;
+}
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{	
+    WaitForInitializationComplete()											;
+    
+	RegisterDelegate(this, Message_, 			cbf_Message_FB)				;
+    RegisterDelegate(this, IPAddress_, 			cbf_IPAddress_FB)			;
+    RegisterDelegate(this, hostName_, 			cbf_hostName_FB)			;
+    RegisterDelegate(this, hardwareVersion_, 	cbf_hardwareVersion_FB)		;
+    RegisterDelegate(this, serialNumber_, 		cbf_serialNumber_FB)		;
+    RegisterDelegate(this, siteIP_, 			cbf_siteIP_FB)				;
+    RegisterDelegate(this, connectStatus_, 		cbf_connectStatus_FB)		;
+    RegisterDelegate(this, siteLost_, 			cbf_siteLost_FB)			;
+    RegisterDelegate(this, autoReboot_, 		cbf_autoReboot_FB)			;
+    RegisterDelegate(this, outletName_, 		cbf_outletName_FB)			;
+    RegisterDelegate(this, outletStatus_, 		cbf_outletStatus_FB)		;
+    RegisterDelegate(this, outletMode_, 		cbf_outletMode_FB)			;
+    RegisterDelegate(this, ledStatus_, 			cbf_ledStatus_FB)			;
+    RegisterDelegate(this, safeVoltageStatus_, 	cbf_safeVoltageStatus_FB)	;
+    RegisterDelegate(this, voltageValue_, 		cbf_voltageValue_FB)		;
+    RegisterDelegate(this, currentValue_, 		cbf_currentValue_FB)		;
+    RegisterDelegate(this, powerValue_, 		cbf_powerValue_FB)			;
+		
+	this.ipAddress	= Default_IP											;
+	this.UserName 	= Default_User											;
+	this.Password 	= Default_Pass											;	
+} 

@@ -1,0 +1,171 @@
+//Development Notes _________________________________________________________________________ Development Notes 
+/*
+v0.0  : 
+
+#If_Defined cDebug
+#EndIf
+
+Development Notes _________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________ Module Compile Time Behavior
+//#Define_Constant cDebug            1
+
+//#Enable_Dynamic                                     
+#Enable_Trace
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE  
+#CATEGORY "32" // Miscellaneous                    
+#Output_Shift                      	2
+//#Analog_Serial_Expand              OutputsWithParams
+
+// ___________________________________________________________________________________________________ Constants
+#Define_Constant cMaxObjects           	32
+#Define_Constant cMaxUsers           	4
+#DEFINE_CONSTANT cMaxFileSize      		24576
+#Define_Constant cMaxCharData      		200
+#DEFINE_CONSTANT cMaxCharFileExt   		64
+#DEFINE_CONSTANT cMaxCharFilePath  		128
+#define_constant cMaxChar				32
+#ENABLE_TRACE
+// _____________________________________________________________________________________________________ F1 Help
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+//Help_Begin
+//#Help_End
+// ________________________________________________________________________________________ Simpl Input - Output 
+
+digital_input	initialize;                                           
+analog_input	Room_Source_FB;
+string_input	DistAudioSources[cMaxCharData], AVRAudioSources[cMaxCharData], TVAudioSources[cMaxCharData];
+
+Digital_output	DistAudioControls;
+Digital_output	AVRAudioControls;
+Digital_output	TVAudioControls;
+// __________________________________________________________________________________________________ Parameters
+
+// ________________________________________________________________________________________________Structure
+                                                                                                   
+// _____________________________________________________________________________________________ Global Varibles
+
+integer g_iAudio[cMaxObjects];
+								
+// ___________________________________________________________________________________________________ Functions
+
+
+function fParse()
+{
+	integer i;
+	string temp[cMaxCharData];
+	
+	i = 0; 
+    
+    
+	if(len(DistAudioSources))
+	{
+		temp = DistAudioSources;
+		while(find(",", temp) > 0)
+		{
+			if(i <= cMaxObjects)
+			{
+				i = atoi(remove(",", temp));
+				g_iAudio[i] = 1;
+			}
+		}
+		if(i <= cMaxObjects)
+		{
+			i = atoi(temp);
+			g_iAudio[i] = 1;
+		}
+	}
+    
+    
+	if(len(AVRAudioSources))
+	{
+		temp = AVRAudioSources;
+		while(find(",", temp) > 0)
+		{
+			if(i <= cMaxObjects)
+			{
+				i = atoi(remove(",", temp));
+				g_iAudio[i] = 2;
+			}
+		}
+		if(i <= cMaxObjects)
+		{
+			i = atoi(temp);
+			g_iAudio[i] = 2;
+		}
+	}
+     
+	if(len(TVAudioSources))
+	{
+		temp = TVAudioSources;
+		while(find(",", temp) > 0)
+		{
+			if(i <= cMaxObjects)
+			{
+				i = atoi(remove(",", temp));
+				g_iAudio[i] = 3;
+			}
+		}
+		if(i <= cMaxObjects)
+		{
+			i = atoi(temp);
+			g_iAudio[i] = 3;
+		}
+	}
+}
+
+function fMatch()
+{
+	integer i,j;
+	
+	i = Room_Source_Fb;
+	j = g_iAudio[i];
+
+	switch(j)
+	{
+		case(1):
+		{
+			DistAudioControls = 1;
+			AVRAudioControls = 0;
+			TVAudioControls = 0;
+		}	
+		case(2):
+		{
+			DistAudioControls = 0;
+			AVRAudioControls = 1;
+			TVAudioControls = 0;
+		}
+		case(3):
+		{
+			DistAudioControls = 0;
+			AVRAudioControls = 0;
+			TVAudioControls = 1;
+		}
+		DEFAULT:
+		{
+			DistAudioControls = 0;
+			AVRAudioControls = 0;
+			TVAudioControls = 0;		
+		}	
+	}
+}
+
+
+// ________________________________________________________________________________________________ Simpl Events
+
+push initialize
+{
+	fParse();
+}
+
+change Room_Source_FB
+{
+	fMatch();	
+}
+
+// ________________________________________________________________________________________________ Start Up Code
+Function Main() 
+{
+}

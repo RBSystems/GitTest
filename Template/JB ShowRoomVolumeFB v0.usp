@@ -1,0 +1,126 @@
+/* 
+Development Notes _________________________________________________________________________ Development Notes /*
+v0.0  : 
+
+#If_Defined cDebug
+#EndIf
+
+Development Notes _________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________ Module Compile Time Behavior
+//#Define_Constant cDebug            1
+
+//#Enable_Dynamic                                     
+#Enable_Trace
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE  
+#CATEGORY "32" // Miscellaneous                    
+#Output_Shift                      	2
+//#Analog_Serial_Expand              OutputsWithParams
+
+// ___________________________________________________________________________________________________ Constants
+#Define_Constant cMaxObjects           	32
+#Define_Constant cMaxUsers           	4
+#DEFINE_CONSTANT cMaxFileSize      		24576
+#Define_Constant cMaxCharData      		200
+#DEFINE_CONSTANT cMaxCharFileExt   		64
+#DEFINE_CONSTANT cMaxCharFilePath  		128
+#define_constant cMaxChar				32
+#ENABLE_TRACE
+// _____________________________________________________________________________________________________ F1 Help
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+//Help_Begin
+//#Help_End
+// ________________________________________________________________________________________ Simpl Input - Output 
+
+string_input	fromConfig[cMaxFileSize];
+
+Digital_output	DistAudioHasFB;
+Digital_output	AVRAudioHasFB;
+Digital_output	TVAudioHasFB;
+
+// __________________________________________________________________________________________________ Parameters
+
+// ________________________________________________________________________________________________Structure
+                                                                                                   
+// _____________________________________________________________________________________________ Global Varibles
+
+							
+// ___________________________________________________________________________________________________ Functions
+
+
+function fParse()
+{
+	integer i;
+	string temp[cMaxCharData];
+	
+	i = 0; 
+    
+	DistAudioHasFB = 0;
+	AVRAudioHasFB = 0;
+    TVAudioHasFB = 0;
+
+    temp = fromConfig;
+		
+
+	while(find(",",temp))
+	{
+		i = atoi(remove(",", temp));
+        
+		switch(i)
+		{
+			case(1):
+			{
+				DistAudioHasFB = 1;
+			}
+			case(2):
+			{
+				AVRAudioHasFB = 1;
+			}
+			case(3):
+			{
+				TVAudioHasFB = 1;
+			}
+		}
+	}	
+	
+		i = atoi(temp);
+
+        switch(i)
+		{
+			case(1):
+			{
+				DistAudioHasFB = 1;
+			}
+			case(2):
+			{
+				AVRAudioHasFB = 1;
+			}
+			case(3):
+			{
+				TVAudioHasFB = 1;
+			}
+			default:
+			{
+				DistAudioHasFB = 0;
+				AVRAudioHasFB = 0;
+                TVAudioHasFB = 0;
+			}
+		}
+
+		temp = "";
+
+}
+
+// ________________________________________________________________________________________________ Simpl Events
+
+change fromConfig
+{
+	fParse();	
+}
+
+// ________________________________________________________________________________________________ Start Up Code
+Function Main() 
+{
+}

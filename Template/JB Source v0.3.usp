@@ -1,0 +1,201 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      1
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxCharData		 128
+#Define_Constant c_maxValues		 64
+
+// _________________________________________________________________________________________________ F1 Help
+
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug" 
+#user_simplsharp_library 	"Config_Core" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+digital_input	Enable;
+digital_input	Initialize;  
+analog_input	SourceIndex;
+analog_input	_skip_,_skip_,_skip_;
+string_input	SourceName_IN[c_maxCharData],shortName_IN[c_maxCharData],iconSerial_IN[c_maxCharData];
+analog_input	SourceID_IN,iconAnalog_IN,Type_IN,DistVideoRoute_IN, DistAudioRoute_IN, GainCompensation_IN;
+analog_input	powerOffDelay_IN;
+
+digital_output	Initialize_Busy_FB;
+digital_output	_skip_,hasVideo, hasAudio,_skip_;
+
+string_output	SourceName, shortName, iconSerial;
+analog_output	SourceID, iconAnalog;
+analog_output	Type;
+analog_output	DistVideoRoute, DistAudioRoute, GainCompensation;
+analog_output	powerOffDelay;
+
+// _________________________________________________________________________________________________ Parameters
+
+Integer_Parameter			SourceInstance						;
+
+#BEGIN_PARAMETER_PROPERTIES SourceInstance						
+	propValidUnits       = unitDecimal|unitTicks                ;
+	propDefaultUnit      = unitDecimal                          ;
+	propShortDescription = "Source Instance"                    ;
+#END_PARAMETER_PROPERTIES
+
+
+// _________________________________________________________________________________________________ Structure
+
+// _________________________________________________________________________________________________ Global Varibles
+
+Source this;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_SourceBusy_FB(Integer s) {Initialize_Busy_FB = s ;}                                                             
+CallBack Function cbf_SourceName_FB(String s) { SourceName = s ;}
+CallBack Function cbf_shortName_FB(String s) { shortName = s ;}
+CallBack Function cbf_SourceID_FB(Integer s) { SourceID = s ;}
+CallBack Function cbf_iconAnalog_FB(Integer s) { iconAnalog = s ;}
+CallBack Function cbf_iconSerial_FB(String s) { iconSerial = s ;}
+CallBack Function cbf_Type_FB(Integer s) { Type = s ;}
+CallBack Function cbf_DistVideoRoute_FB(integer s) { DistVideoRoute = s ;}
+CallBack Function cbf_DistAudioRoute_FB(integer s) { DistAudioRoute = s ;}
+CallBack Function cbf_GainCompensation_FB(Integer s) { GainCompensation = s ;}
+CallBack Function cbf_powerOffDelay_FB(Integer s) { powerOffDelay = s ;}
+CallBack Function cbf_hasVideo_FB(String s) 
+{
+	signed_integer si;
+	string y[6];
+	y = "yes"; 
+	si = CompareStringsNoCase(s,y) ;
+	if(si = 0)
+	{
+		hasVideo = 1;
+	}
+	else
+	{
+		hasVideo = 0;
+	}
+	
+}
+CallBack Function cbf_hasAudio_FB(String s) 
+{
+	signed_integer si;
+	string y[6];
+	y = "yes"; 
+	si = CompareStringsNoCase(s,y) ;
+	if(si = 0)
+	{
+		hasAudio = 1;
+	}
+	else
+	{
+		hasAudio = 0;
+	}
+	
+}
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+	if(Enable)
+	{
+		this.sourceIndex = SourceInstance;
+		this.Getsource(SourceInstance);
+	}	
+}
+
+Change SourceIndex
+{
+	this.sourceIndex = SourceIndex;
+	this.Getsource(SourceIndex);
+}
+
+Change shortName_IN
+{
+	this.shortName = shortName_IN;
+}
+
+Change sourceName_IN
+{
+	this.sourceName = sourceName_IN;
+}
+
+Change iconSerial_IN
+{
+	this.iconSerial = iconSerial_IN;
+}
+
+Change SourceID_IN
+{
+	this.sourceID = SourceID_IN;
+}
+
+Change iconAnalog_IN
+{
+	this.iconAnalog = iconAnalog_IN;
+}
+
+Change Type_IN
+{
+	this.Type = Type_IN;
+}
+
+Change DistVideoRoute_IN
+{
+	this.DistVideoRoute = DistVideoRoute_IN;
+}
+
+Change DistAudioRoute_IN
+{
+	this.DistAudioRoute = DistAudioRoute_IN;
+}
+
+Change GainCompensation_IN
+{
+	this.GainCompensation = GainCompensation_IN;
+}
+
+Change powerOffDelay_IN
+{
+	this.powerOffDelay = powerOffDelay_IN;
+}
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{
+	waitforinitializationcomplete();
+
+	RegisterDelegate(this, sourceBusy_, cbf_SourceBusy_FB);
+	RegisterDelegate(this, sourceName_, cbf_SourceName_FB);
+	RegisterDelegate(this, shortName_, cbf_shortName_FB);
+	RegisterDelegate(this, sourceID_, cbf_SourceID_FB);
+	RegisterDelegate(this, iconAnalog_, cbf_iconAnalog_FB);
+	RegisterDelegate(this, iconSerial_, cbf_iconSerial_FB);
+	RegisterDelegate(this, Type_, cbf_Type_FB);
+	RegisterDelegate(this, GainCompensation_, cbf_Type_FB);
+	RegisterDelegate(this, DistVideoRoute_, cbf_DistVideoRoute_FB);
+	RegisterDelegate(this, DistAudioRoute_, cbf_DistAudioRoute_FB);
+	RegisterDelegate(this, GainCompensation_, cbf_GainCompensation_FB);
+	RegisterDelegate(this, powerOffDelay_, cbf_powerOffDelay_FB);
+	RegisterDelegate(this, hasVideo_, cbf_hasVideo_FB);
+	RegisterDelegate(this, hasAudio_, cbf_hasAudio_FB);
+	
+	this.sourceIndex = SourceIndex;
+}
+
+ 

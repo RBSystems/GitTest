@@ -1,0 +1,109 @@
+// _____________________ Module Compile Time Behavior ________________________________________________________
+#DEFINE_CONSTANT    cMaxValues     250  //Number of Items in a Preset
+#DEFINE_CONSTANT    cMaxDataSets   8   //Number of Presets
+#OUTPUT_SHIFT                      1
+#CATEGORY "32" // Miscellaneous                    
+#ANALOG_SERIAL_EXPAND              InputsWithOutputs
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+// #Enable_Dynamic
+// #HELP_PDF_FILE ""
+#HELP_BEGIN
+	
+#HELP_END
+
+// _____________________ Input - Output _______________________________________________________________________
+Digital_Input _SKIP_                 ;
+Digital_INPUT Recall, Save            ;
+ANALOG_INPUT Value_In[cMaxValues]    ;
+
+DIGITAL_OUTPUT  Busy_FB    ;
+DIGITAL_OUTPUT  Save_Done  ;
+ANALOG_OUTPUT Value_Out[cMaxValues]  ;
+
+// _____________________ Parameters ___________________________________________________________________________
+String_Parameter PathFileExt[64]                                   ;
+
+#BEGIN_PARAMETER_PROPERTIES   PathFileExt
+	propValidUnits   = unitString                                  ;
+	propDefaultUnit  = unitString                                  ;
+#END_PARAMETER_PROPERTIES
+
+// _____________________ Global Varibles _______________________________________________________________________
+INTEGER g_iValues[cMaxDataSets][cMaxValues] ;  
+
+// _____________________ Events ________________________________________________________________________________
+
+push Recall
+{
+	Signed_Integer iHandle, iBytes ;
+	Integer i,j ;
+	
+	j = 1;
+		
+	If(!Busy_FB)
+	{
+		Busy_FB = On ;
+		
+    	StartFileOperations()                                  ;
+        iHandle = FileOpen(PathFileExt, _O_RDonly|_o_binary) ;
+        iBytes  = ReadIntegerArray(iHandle, g_iValues)         ;
+		print(" %d Bytes read",iBytes)								;
+        FileClose(iHandle)                                     ;        
+    	EndFileOperations()                                    ;
+    	
+    	If(iBytes > 0)
+    	{
+    		For(i = 1 To cMaxValues Step 1)
+    		{
+    			If(IsSignalDefined(Value_Out[i]))
+    			{
+    				Value_Out[i] = g_iValues[j][i] ;
+    			}
+    		}	
+    	}
+    	
+    	Busy_FB = OFF ;
+    }
+}
+push Save
+{
+    Signed_Integer iHandle, iBytes ;
+	Integer i,j ;
+
+	j=1;		
+	
+	If(!Busy_FB)
+	{
+		Busy_FB = On ;
+		
+		For(i = 1 To cMaxValues Step 1)
+   		{
+   			g_iValues[j][i] = Value_In[i] ;
+   		}
+		
+    	StartFileOperations()                                  ;
+        iHandle = FileOpen(PathFileExt, _O_Creat | _O_Trunc |_O_RDWR| _o_binary) ;
+        iBytes  = WriteIntegerArray(iHandle, g_iValues)        ;
+		print(" %d Bytes Written",iBytes)								;
+        FileClose(iHandle)                                     ;        
+    	EndFileOperations()                                    ;
+    	
+    	If(iBytes > 0)
+    	{
+    		Pulse(50, Save_Done) ;
+    		Trace("Saved Preset:%d", Save) ;		
+    	}
+    	
+    	Busy_FB = OFF ;
+    }
+}
+
+// _____________________ Start Up Code __________________________________________________________________________
+Function Main()
+{
+}
+
+
+

@@ -1,0 +1,93 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      1
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxCharData		 128
+#Define_Constant c_maxValues		 64
+#Define_Constant c_maxInputs		 10
+
+// _________________________________________________________________________________________________ F1 Help
+
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug" 
+#user_simplsharp_library 	"Config_Core" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+digital_input	Enable;
+digital_input	Initialize,_skip_;
+string_input	AreaName_IN[c_maxCharData], IncludedZones_IN[c_maxCharData];
+
+digital_output	Initialize_Busy_FB, _skip_;
+string_output	AreaName, IncludedZones;
+
+// _________________________________________________________________________________________________ Parameters
+
+Integer_Parameter			MultiZoneInstance						;
+
+#BEGIN_PARAMETER_PROPERTIES MultiZoneInstance						
+	propValidUnits       = unitDecimal|unitTicks                ;
+	propDefaultUnit      = unitDecimal                          ;
+	propShortDescription = "MultiZone Instance"                      ;
+#END_PARAMETER_PROPERTIES
+
+
+// _________________________________________________________________________________________________ Structure
+
+// _________________________________________________________________________________________________ Global Varibles
+
+MultiZone this;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_MultiZoneBusy_FB(Integer s) {Initialize_Busy_FB = s ;}
+
+CallBack Function cbf_Name_FB(string s) { AreaName = s ;}                                                             
+CallBack Function cbf_Zones_FB(string s) { IncludedZones = s ;} 
+
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+        this.MultiZoneIndex = MultiZoneInstance;
+		this.GetMultiZone(MultiZoneInstance);
+}
+
+Change AreaName_IN
+{
+	this.Name = AreaName_IN;
+}
+
+Change IncludedZones_IN
+{
+	this.IncludedZones = IncludedZones_IN;
+}
+
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{
+	RegisterDelegate(this, MultiZoneBusy_, cbf_MultiZoneBusy_FB);
+
+    RegisterDelegate(this, Name_, cbf_Name_FB);
+    RegisterDelegate(this, IncludedZones_, cbf_Zones_FB);
+
+}
+
+ 

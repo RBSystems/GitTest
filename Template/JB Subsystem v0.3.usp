@@ -1,0 +1,117 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      1
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxCharData		 128
+#Define_Constant c_maxValues		 64
+
+// _________________________________________________________________________________________________ F1 Help
+
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug" 
+#user_simplsharp_library 	"Config_Core" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+digital_input	Enable;
+digital_input	Initialize;  
+analog_input	SubsystemIndex;
+analog_input    _skip_;
+string_input	SubsystemName_IN[c_maxCharData],iconSerial_IN[c_maxCharData];
+analog_input	SubsystemID_IN, iconAnalog_IN;
+
+
+digital_output	Initialize_Busy_FB, _skip_,_skip_;
+string_output	SubsystemName,iconSerial;
+analog_output	SubsystemID, iconAnalog;
+
+
+// _________________________________________________________________________________________________ Parameters
+
+Integer_Parameter			SubsystemInstance						;
+
+#BEGIN_PARAMETER_PROPERTIES SubsystemInstance						
+	propValidUnits       = unitDecimal|unitTicks                ;
+	propDefaultUnit      = unitDecimal                          ;
+	propShortDescription = "Subsystem Instance"                    ;
+#END_PARAMETER_PROPERTIES
+
+
+// _________________________________________________________________________________________________ Structure
+
+// _________________________________________________________________________________________________ Global Varibles
+
+Subsystem this;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_SubsystemBusy_FB(Integer s) {Initialize_Busy_FB = s ;}                                                             
+CallBack Function cbf_SubsystemName_FB(String s) { SubsystemName = s ;}
+CallBack Function cbf_SubsystemID_FB(Integer s) { SubsystemID = s ;}
+CallBack Function cbf_iconAnalog_FB(Integer s) { iconAnalog = s ;}
+CallBack Function cbf_iconSerial_FB(String s) { iconSerial = s ;}
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push Initialize
+{
+	if(Enable)
+	{
+		this.SubsystemIndex = SubsystemInstance;
+		this.GetSubsystem(SubsystemInstance);
+	}	
+}
+
+
+Change SubsystemIndex
+{
+	this.SubsystemIndex = SubsystemIndex;
+	this.GetSubsystem(SubsystemIndex);
+}
+
+Change SubsystemName_IN
+{
+	this.SubsystemName = SubsystemName_IN;
+}
+
+Change iconSerial_IN
+{
+	this.IconSerial = iconSerial_IN;
+}
+
+Change SubsystemID_IN
+{
+	this.SubsystemID = SubsystemID_IN;
+}
+
+Change iconAnalog_IN
+{
+	this.IconAnalog = iconAnalog_IN;
+}
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{
+	RegisterDelegate(this, SubsystemBusy_, cbf_SubsystemBusy_FB);
+	RegisterDelegate(this, SubsystemName_, cbf_SubsystemName_FB);
+	RegisterDelegate(this, SubsystemID_, cbf_SubsystemID_FB);
+	RegisterDelegate(this, IconAnalog_, cbf_iconAnalog_FB);
+	RegisterDelegate(this, IconSerial_, cbf_iconSerial_FB);
+}
+
+ 

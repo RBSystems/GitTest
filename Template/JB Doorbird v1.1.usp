@@ -1,0 +1,244 @@
+/* Development Notes _________________________________________________________________________________ Development Notes */
+// ________________________________________________________________________________________________ Module Compile Time Behavior
+
+#ENABLE_STACK_CHECKING
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC                                     
+#ENABLE_TRACE
+#DEFINE_CONSTANT cDebug            1
+#CATEGORY                          "32"
+#Output_Shift                      0
+
+// _________________________________________________________________________________________________ Constants
+
+#Define_Constant c_iFileSize         65000
+#Define_Constant c_maxChar			 128
+#Define_Constant c_maxValues		 64
+#Define_Constant c_maxInputs		 10
+
+// _________________________________________________________________________________________________ F1 Help
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+// _________________________________________________________________________________________________ Libraries
+
+#includepath				"..\\bin\\Debug"
+#user_simplsharp_library 	"Doorbird" 
+
+// _________________________________________________________________________________________________ Simpl Input - Output
+
+digital_input 	Initialize,OpenDoor, LightOn, DoorBell_Subscribe, DoorBell_UnSubscribe;
+digital_input	DoorOpen_Subscribe, DoorOpen_UnSubscribe,Motion_Subscribe, Motion_UnSubscribe;
+string_input 	IP_Address[16], UserName[32], Password[32], URL[64], Port[6];
+digital_output	Initialized_FB, doorbellEvent_FB, motionEvent_FB, doorOpenEvent_FB;
+digital_output	doorbell_event_subscribed_FB,dooropen_event_subscribed_FB,motion_event_subscribed_FB;
+string_output	Message_FB, IPAddress_FB,ImageURL_FB,MjpegURL_FB,RtspURL_FB;
+
+// _________________________________________________________________________________________________ Parameters
+
+String_Parameter Default_IP[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_IP
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default IP Address"			        ;
+#END_PARAMETER_PROPERTIES
+
+String_Parameter Default_User[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_User
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default User Name"     			  	;
+#END_PARAMETER_PROPERTIES
+
+String_Parameter Default_Pass[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_Pass
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default Password"			        ;
+#END_PARAMETER_PROPERTIES
+
+String_Parameter Default_URL[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_URL
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default URL"				        ;
+#END_PARAMETER_PROPERTIES
+
+String_Parameter Default_Port[c_maxChar] ;
+#BEGIN_PARAMETER_PROPERTIES Default_Port
+	propValidUnits       = unitString                           ;
+	propDefaultUnit      = unitString                           ;
+	propShortDescription = "Default Port"				        ;
+#END_PARAMETER_PROPERTIES
+
+// _________________________________________________________________________________________________ Structure
+// _________________________________________________________________________________________________ Global Varibles
+
+API this;
+
+string	g_sEventURL[c_maxChar];
+string	g_sEventType[c_maxChar];
+integer g_iSubState;
+integer g_iSubEvent;
+
+// _________________________________________________________________________________________________ Functions
+
+CallBack Function cbf_Message_FB		(String s) 	{	Message_FB = s 			;}
+CallBack Function cbf_Initialized_FB	(integer v)	{	Initialized_FB = v 		;}
+CallBack Function cbf_IPAddress_FB		(string s)	{	IPaddress_FB = s 		;}
+
+
+
+CallBack Function cbf_DoorBellEvent_FB	(integer v)
+	{
+		if(v > 0)
+		{		
+			pulse(50,doorbellEvent_FB) 	;
+		}	
+	}
+CallBack Function cbf_MotionEvent_FB	(integer v)
+	{
+		if(v>0)
+		{	
+			pulse(50,motionEvent_FB) 		;
+		}
+	}
+CallBack Function cbf_DoorOpenEvent_FB	(integer v)
+	{
+		if(v > 0)
+		{	
+			pulse(50,doorOpenEvent_FB) 	;
+		}
+	}
+CallBack Function cbf_SubEvent_FB		(string s)
+	{	
+		if(s = "doorbell")
+		{
+			g_iSubEvent	= 1; 
+		}
+		if(s = "dooropen")
+		{
+			g_iSubEvent	= 2; 
+		}
+		if(s = "motionsensor")
+		{
+			g_iSubEvent	= 3; 
+		}		
+	}
+CallBack Function cbf_SubState_FB		(string s)
+	{	
+		g_iSubState = atoi(s) 	;
+		
+		switch(g_iSubEvent)
+		{
+			case(1):
+			{
+				doorbell_event_subscribed_FB = g_iSubState;			
+			}
+			case(2):
+			{
+				dooropen_event_subscribed_FB = g_iSubState;			
+			}
+			case(3):
+			{
+				motion_event_subscribed_FB = g_iSubState;			
+			}
+		}
+	}
+function setURLs()
+{
+	string ImageURL[c_maxChar], MjpegURL[c_maxChar], RtspURL[c_maxChar];
+	 
+	makestring(ImageURL, "http://%s/bha-api/image.cgi?http-user=%s&http-password=%s", this.IPAddress, this.UserName, this.Password);
+	ImageURL_FB = ImageURL;
+	
+	makestring(MjpegURL, "http://%s/bha-api/video.cgi?http-user=%s&http-password=%s", this.IPAddress, this.UserName, this.Password);
+	MjpegURL_FB = MjpegURL;
+	
+	makestring(RtspURL, "rtsp://%s:%s@%s:8557/mpeg/media.amp", this.UserName, this.Password, this.IPAddress);
+	RtspURL_FB = RtspURL;
+}
+
+// _________________________________________________________________________________________________ Simpl Events
+
+Push	Initialize				
+	{	
+		this._Initialize(this.URL, atoi(this.Port))				;
+		setURLs(); 
+	}
+Push 	OpenDoor 				{	this.openDoor()							; }
+Push 	LightOn 				{	this.lightOn()							; }
+Push	DoorBell_Subscribe		
+	{	
+		g_sEventURL = "/doorbell_event"							;
+		g_sEventType = "doorbell"								; 
+		this.Subscribe(g_sEventURL,g_sEventType,1)				; 
+	}
+Push	DoorBell_UnSubscribe
+	{	
+		g_sEventURL = "/doorbell_event"							;
+		g_sEventType = "doorbell"								; 
+		this.Subscribe(g_sEventURL,g_sEventType,0)				; 
+	}
+Push	DoorOpen_Subscribe
+	{	
+		g_sEventURL = "/dooropen_event"							;
+		g_sEventType = "dooropen"								; 
+		this.Subscribe(g_sEventURL,g_sEventType,1)				; 
+	}
+Push	DoorOpen_UnSubscribe
+	{	
+		g_sEventURL = "/dooropen_event"							;
+		g_sEventType = "dooropen"								; 
+		this.Subscribe(g_sEventURL,g_sEventType,0)				; 
+	}
+Push	Motion_Subscribe
+	{	
+		g_sEventURL = "/motion_event"							;
+		g_sEventType = "motionsensor"							; 
+		this.Subscribe(g_sEventURL,g_sEventType,1)				; 
+	}
+Push	Motion_UnSubscribe
+	{	
+		g_sEventURL = "/motion_event"							;
+		g_sEventType = "motionsensor"							; 
+		this.Subscribe(g_sEventURL,g_sEventType,0)				; 
+	}
+Change 	IP_Address 				
+	{ 	
+		this.IPAddress 	= 	IP_Address							;
+		setURLs()												;		 		
+	}
+Change 	UserName 				
+	{ 	
+		this.UserName	=	UserName							; 
+		setURLs()												;	
+	}
+Change 	Password 				
+	{
+		this.Password	=	Password							;
+		setURLs()												;	
+	}
+Change	URL						{	this.URL		=	URL 				; }
+Change	Port					{	this.Port		=	Port	 			; }
+
+// _________________________________________________________________________________________________ Start Up Code
+
+Function Main() 
+{	
+    WaitForInitializationComplete()										;
+    
+	RegisterDelegate(this, Message_, 			cbf_Message_FB)			;
+	RegisterDelegate(this, Initialized_, 		cbf_Initialized_FB)		;
+	RegisterDelegate(this, doorBellEvent_, 		cbf_DoorBellEvent_FB)	;
+	RegisterDelegate(this, motionEvent_, 		cbf_MotionEvent_FB)		;
+	RegisterDelegate(this, doorOpenEvent_, 		cbf_DoorOpenEvent_FB)	;
+	RegisterDelegate(this, SubscriptionEvent_, 	cbf_SubEvent_FB)		;
+	RegisterDelegate(this, SubscriptionState_, 	cbf_SubState_FB)		;
+    RegisterDelegate(this, IPAddress_, 			cbf_IPAddress_FB)		;
+		
+	this.IPAddress	= Default_IP										;
+	this.UserName 	= Default_User										;
+	this.Password 	= Default_Pass										;
+	this.URL	 	= Default_URL										;
+	this.Port 		= Default_Port										;	
+} 

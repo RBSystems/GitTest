@@ -1,0 +1,714 @@
+
+#Default_Volatile
+#CATEGORY "32" // Miscellaneous                    
+#Define_Constant cMaxlistitems     	5
+#Define_Constant cMaxsize     		32
+#Define_Constant cMaxsizeHTML     	612
+#Define_Constant cMaxConfig    		50
+#OUtput_Shift                       1                  
+
+// _____________________________________________________________________________________________________ F1 Help
+//#HINT                              ""
+//#HELP_PDF_FILE ""
+#Help_Begin
+ This Module will order list from top to bottom based on xml config. Includes Press and release Digitals
+inputs. 
+#Help_End
+
+                                
+Digital_Input  	_SKIP_, Check																	;
+
+Digital_Input 	_SKIP_,Btn01_press[cMaxConfig],_Skip_, Btn01_Fb[cMaxConfig]						;
+Digital_Input 	_SKIP_,Btn02_press[cMaxConfig],_Skip_, Btn02_Fb[cMaxConfig]						;
+Digital_Input 	_SKIP_,Btn03_press[cMaxConfig],_Skip_, Btn03_Fb[cMaxConfig]						;
+Digital_Input 	_SKIP_,Btn04_press[cMaxConfig],_Skip_, Btn04_Fb[cMaxConfig]						;
+Digital_Input 	_SKIP_,Btn05_press[cMaxConfig],_Skip_, Btn05_Fb[cMaxConfig]						;
+Digital_Input 	_SKIP_,Btn06_press[cMaxConfig],_Skip_, Btn06_Fb[cMaxConfig]						;
+Digital_Input 	_SKIP_,Btn07_press[cMaxConfig],_Skip_, Btn07_Fb[cMaxConfig]						;
+Digital_Input 	_SKIP_,Btn08_press[cMaxConfig],_Skip_, Btn08_Fb[cMaxConfig]						;
+
+String_Input   	_SKIP_, _SKIP_ ,from_module$[612],_skip_,_skip_									;
+String_Input	att_label01[cMaxConfig][cMaxsizeHTML],att_label02[cMaxConfig][cMaxsizeHTML]		;
+
+analog_input 	_Skip_ ,att_analog01[cMaxConfig],att_analog02[cMaxConfig]						;
+
+digital_output 	busy_fb																			;
+
+String_output 	_Skip_,Message_FB																;
+Analog_Output  	_SKIP_, list_num																;
+
+digital_output 	_Skip_, Press_out01[cMaxConfig],_skip_,List_FB01[cMaxConfig]					;
+digital_output 	_Skip_, Press_out02[cMaxConfig],_skip_,List_FB02[cMaxConfig]					;
+digital_output 	_Skip_, Press_out03[cMaxConfig],_skip_,List_FB03[cMaxConfig]					;
+digital_output 	_Skip_, Press_out04[cMaxConfig],_skip_,List_FB04[cMaxConfig]					;
+digital_output 	_Skip_, Press_out05[cMaxConfig],_skip_,List_FB05[cMaxConfig]					;
+digital_output 	_Skip_, Press_out06[cMaxConfig],_skip_,List_FB06[cMaxConfig]					;
+digital_output 	_Skip_, Press_out07[cMaxConfig],_skip_,List_FB07[cMaxConfig]					;
+digital_output 	_Skip_, Press_out08[cMaxConfig],_skip_,List_FB08[cMaxConfig]					;
+
+
+String_output 	_Skip_,list_text01[cMaxConfig]													;
+String_output 	_Skip_,list_text02[cMaxConfig]													;
+
+Analog_output 	_Skip_ ,List_analog01[cMaxConfig],List_analog02[cMaxConfig]						;
+
+analog_output 	_SkIP_, order[cMaxConfig]														;
+
+
+
+// __________________________________________________________________________________________________ Parameters
+	    
+// _____________________________________________________________________________________________ Global Varibles
+Integer g_iBusy ;
+Integer g_iEnable ;
+integer g_iOrder[cMaxConfig] ;
+// _____________________________________________________________________________________________ Functions
+
+Function fOrder()
+{
+	Integer i,j ;		
+	busy_fb = 1;
+	if(g_iBusy = 0)
+	{
+		g_iBusy = 1;
+		try
+		{
+			for(i = 1 to cMaxConfig)
+			{
+				/*                 
+                List_FB01[i] = 0;
+                List_FB02[i] = 0;
+                List_FB03[i] = 0;
+                List_FB04[i] = 0;
+                List_FB05[i] = 0;
+                List_FB06[i] = 0;
+                List_FB07[i] = 0;
+                List_FB08[i] = 0;
+                */
+
+				if(order[i] > 0)
+				{
+                    				
+					List_FB01[order[i]] = Btn01_Fb[i] 		  ;
+					List_FB02[order[i]] = Btn02_Fb[i] 		  ;
+					List_FB03[order[i]] = Btn03_Fb[i] 		  ;
+					List_FB04[order[i]] = Btn04_Fb[i] 		  ;
+					List_FB05[order[i]] = Btn05_Fb[i] 		  ;
+					List_FB06[order[i]] = Btn06_Fb[i] 		  ;
+					List_FB07[order[i]] = Btn07_Fb[i] 		  ;
+					List_FB08[order[i]] = Btn08_Fb[i] 		  ;
+					
+					list_text01[i] = att_label01[order[i]]	  ;
+					list_text02[i] = att_label02[order[i]]	  ;
+					
+					If(list_analog01[i] != att_analog01[order[i]])
+					{
+						list_analog01[i] = att_analog01[order[i]] ;
+					}
+				}
+			}
+		}
+		catch
+		{
+			Message_FB = "Exception in fOrder " + GetExceptionMessage() ;			
+		}
+		g_iBusy = 0;
+		busy_fb = 0;
+	}
+	else
+	{
+		Message_FB = "fOrder Ignored busy";
+	}
+	
+	g_iEnable = 1;
+}
+
+Function fParse()
+{
+	integer k                              ;
+	string temp[384]                       ;
+	
+	temp = from_module$	                   ;
+
+	for(k = 1 to cMaxConfig)
+	{
+		g_iOrder[k] = 0;
+	}
+	
+	k = 0                                  ;
+		
+	while(Find(",", temp) > 0)
+	{
+		k = k + 1                          ;
+		order[k] = atoi(remove(",", temp)) ;
+		g_iOrder[order[k]] = k			   ;
+	}
+    
+    k = k + 1                              ;
+    order[k] = AtoI(temp)                  ;
+	g_iOrder[order[k]] = k			   	   ;
+    
+	list_num = k                           ;
+
+}
+
+
+// _____________________________________________________________________________________________ Simpl Windows Events
+
+Change From_module$
+{
+	if(Len(From_module$))
+	{
+		fParse() ;
+		delay(100);
+		fOrder() ;		
+	}
+}
+
+Release Check  { fOrder() ; }
+
+/////////////////// Presses Begin
+
+Change att_analog01
+{
+ 	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+    
+   	if(g_iOrder[Btn_index] > 0) 
+	{
+		List_analog01[g_iOrder[Btn_index]] = att_analog01[Btn_index];
+		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+
+Change att_analog02
+{
+ 	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(g_iOrder[Btn_index] > 0) 
+	{
+		List_analog02[g_iOrder[Btn_index]] = att_analog02[Btn_index];		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+
+Change att_label02
+{
+  	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(g_iOrder[Btn_index] > 0) 
+	{
+		List_text02[g_iOrder[Btn_index]] = att_label02[Btn_index];		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}	
+}
+
+Push Btn01_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+		Press_out01[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+Push Btn02_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+        Press_out02[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+Push Btn03_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+        Press_out03[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+Push Btn04_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+        Press_out04[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+Push Btn05_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+        Press_out05[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+Push Btn06_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+        Press_out06[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+Push Btn07_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+        Press_out07[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+Push Btn08_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+   	if(order[Btn_index] > 0) 
+	{
+        Press_out08[order[Btn_index]] = 1;		
+	}
+	else
+	{
+		Message_FB = "Button press function not Mapped or mapped Zero" ;
+	}
+}
+
+Release Btn01_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out01[order[Btn_index]] = 0;
+	}
+}
+Release Btn02_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out02[order[Btn_index]] = 0;
+	}
+}
+Release Btn03_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out03[order[Btn_index]] = 0;
+	}
+}
+Release Btn04_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out04[order[Btn_index]] = 0;
+	}
+}
+Release Btn05_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out05[order[Btn_index]] = 0;
+	}
+}
+Release Btn06_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out06[order[Btn_index]] = 0;
+	}
+}
+Release Btn07_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out07[order[Btn_index]] = 0;
+	}
+}
+Release Btn08_press
+{
+	integer Btn_index;
+	Btn_index = getlastmodifiedarrayindex();
+
+	if(g_iEnable)		
+	{
+		Press_out08[order[Btn_index]] = 0;
+	}
+}
+//////////////////////// Presses End 
+
+Push Btn01_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB01[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+RELEASE Btn01_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB01[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+Push Btn02_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB02[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+RELEASE Btn02_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB02[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+Push Btn03_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB03[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+
+RELEASE Btn03_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB03[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+Push Btn04_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB04[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+
+RELEASE Btn04_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB04[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+Push Btn05_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB05[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+
+RELEASE Btn05_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB05[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+Push Btn06_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB06[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+
+RELEASE Btn06_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB06[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+Push Btn07_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB07[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+
+RELEASE Btn07_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB07[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+Push Btn08_Fb
+{
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+         
+    	For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB08[j]=1															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+
+RELEASE Btn08_Fb
+{	    
+	integer i,j																			;
+	i = getlastmodifiedarrayindex()														;
+       
+		For( j = 1 to cMaxconfig) 
+		{
+			if( order[j] = i)
+			{
+				List_FB08[j]=0															;
+				break 																	;
+			}
+		}
+		if(j >= cMaxconfig)
+		{
+			Message_FB = "FB function not Mapped or mapped Zero"						;
+		}
+}
+
+// _____________________________________________________________________________________________ Startup Code
+Function Main()
+{
+	g_iBusy = 0;
+	g_iEnable = 0;	
+}
+
